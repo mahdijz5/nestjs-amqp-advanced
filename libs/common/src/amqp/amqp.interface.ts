@@ -1,3 +1,5 @@
+import { PublishOptions } from "amqp-connection-manager/dist/types/ChannelWrapper"
+
 export interface ExchangeRegisterConfigurationInterfaces {
     name: string
     type: "fanout" | "direct" | "header"
@@ -15,10 +17,11 @@ export interface AmqpRegisterConfigurationInterfaces {
     exchnage?: ExchangeRegisterConfigurationInterfaces
 }
 
-export interface SendMessageInterface {
-    destQueue: string
+
+
+export interface SendMessageInterfaceOptions {
+    toQueue: string
     subscribe?: boolean
-    payload?: any
     queuName?: string
 }
 
@@ -35,3 +38,20 @@ export class ContentMessageAmqp {
         this.options = options
     }
 }
+
+export interface MessageProperties extends PublishOptions{
+    contentType?: string;
+    contentEncoding?: string;
+    headers: { [key: string]: any };
+    deliveryMode?: number;
+    priority?: number;
+    correlationId?: string;
+    replyTo?: string;
+    expiration?: string;
+    messageId?: string;
+    timestamp?: number;
+    type?: string;
+    userId?: string;
+    appId?: string;
+    clusterId?: string;
+ }
