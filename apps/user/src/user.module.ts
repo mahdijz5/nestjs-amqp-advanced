@@ -4,18 +4,18 @@ import { UserService } from './user.service';
 import { AmqpModule } from '@app/common/amqp/modules/amqp.module';
 
 @Module({
-  imports: [AmqpModule.register({
-    exchnage : {
-      name : "user",
-      type : "direct"
-    },
-    queue :{
-      name : "user",
-      routingKey : "user-queue"
-    }
-  })], 
+  imports: [
+    AmqpModule.register({
+      exchnage: {
+        name: "test",
+        type: "direct"
+      },
+      queue: {
+        name: "test2",
+        routingKey: "test.*"
+      }
+    })],
   controllers: [UserController],
   providers: [UserService],
 })
-export class UserModule {}  
- 
+export class UserModule { }

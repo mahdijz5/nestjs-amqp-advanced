@@ -2,7 +2,7 @@ import { PublishOptions } from "amqp-connection-manager/dist/types/ChannelWrappe
 
 export interface ExchangeRegisterConfigurationInterfaces {
     name: string
-    type: "fanout" | "direct" | "header"
+    type: "fanout" | "direct" | "header" | "topic"
 
 
 }
@@ -15,6 +15,10 @@ export interface QueueRegisterConfigurationInterfaces {
 export interface AmqpRegisterConfigurationInterfaces {
     queue?: QueueRegisterConfigurationInterfaces
     exchnage?: ExchangeRegisterConfigurationInterfaces
+    options? : {
+        ack?: boolean
+        nack? : boolean
+    }
 }
 
 

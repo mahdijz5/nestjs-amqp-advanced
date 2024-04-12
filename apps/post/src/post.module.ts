@@ -6,16 +6,16 @@ import { AmqpModule } from '@app/common/amqp/modules/amqp.module';
 @Module({
   imports: [
     AmqpModule.register({
-    exchnage : {
-      name : "post",
-      type : "direct"
-    },
-    queue :{
-      name : "post",
-      routingKey : "post-queue"
-    }
-  })],
+      exchnage: {
+        name: "post", 
+        type: "direct"
+      },
+      queue: {
+        name: "post",
+        routingKey: "post-queue"
+      }
+    })],
   controllers: [PostController],
   providers: [PostService],
 })
-export class PostModule {}
+export class PostModule { }

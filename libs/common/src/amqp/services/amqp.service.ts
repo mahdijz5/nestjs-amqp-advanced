@@ -73,9 +73,9 @@ export class AmqpService implements OnModuleInit {
 
 
     async consumeMessage({ handler }: ConsumeMessageInterface) {
-        await this.channel.assertQueue(this.queueName, { durable: false });
-
-        await this.channel.consume(this.queueName, async (message) => {
+        const { queue } = await this.channel.assertQueue(this.queueName, {});
+        console.log(queue)
+        await this.channel.consume(queue, async (message) => {
             const replyTo = message.properties.replyTo
             const correlationId = message.properties.correlationId
             console.log(message)
@@ -97,12 +97,23 @@ export class AmqpService implements OnModuleInit {
     async onModuleInit() {
         await this.connectionService.connect()
         this.channel = await this.connectionService.createChannel()
-        await this.channel.assertQueue(this.queueName, { durable: false });
+        const exchnage_config = this._configs.exchnage
+        const queue_config = this._configs.queue
 
-        const handlers = await this.handlerService.getHandlers("controllers") 
-        for (const handler of handlers) {
-            await this.consumeMessage({ handler })
-        } 
+        this.channel.on("connect", async () => {
+            await this.channel.deleteExchange(exchnage_config.name)
+            await this.channel.deleteQueue(this.queueName)
+
+            const {queue}=await this.channel.assertQueue(this.queueName, {   });
+            const {exchange}=await this.channel.assertExchange(exchnage_config.name, exchnage_config.type, { durable: true });
+            
+            await this.channel.bindQueue(queue,exchange, queue_config.routingKey); 
+ 
+            const handlers = await this.handlerService.getHandlers("controllers")
+            for (const handler of handlers) {
+                await this.consumeMessage({ handler })
+            }
+        })
     }
 
 } 
