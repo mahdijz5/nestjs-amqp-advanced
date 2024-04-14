@@ -107,7 +107,7 @@ export class HandlerService {
         return data && !isObject(data) ? args[index]?.[data] : args[index];
     }
 
-    async getHandlers(component: "controllers" | "providers"):  Promise<((...args: any[]) => Promise<any>)[] > {
+    async getHandlers(component: "controllers" | "providers"): Promise<{ handler: ((...args: any[]) => Promise<any>), metaData: string }[]> {
         const modulesMap = [...this.modulesContainer.entries()];
 
         const providers = await Promise.all(
@@ -122,12 +122,14 @@ export class HandlerService {
                     });
             })
         );
-        const methodes = flatMap(providers, (provider) =>
-            this.classMethodsWithMetaAtKey(provider, CREATE_CHANNEL)
+        const methodes = flatMap(providers, (provider) => {
+            return this.classMethodsWithMetaAtKey(provider, CREATE_CHANNEL)
+        }
         )
-        const handlerList : ((...args: any[]) => Promise<any>)[] = []
+        const handlerList: { handler: ((...args: any[]) => Promise<any>), metaData: string }[] = []
         for (const methode of methodes) {
             const discoveredMethod = methode.discoveredMethod
+            const meta = methode.meta
             const handler = this.externalContextCreator.create(
                 discoveredMethod.parentClass.instance,
                 discoveredMethod.handler,
@@ -139,7 +141,7 @@ export class HandlerService {
                 undefined, // options
                 'rmq' // contextType
             );
-            handlerList.push(handler)
+            handlerList.push({ handler, metaData: meta })
         }
 
         return handlerList

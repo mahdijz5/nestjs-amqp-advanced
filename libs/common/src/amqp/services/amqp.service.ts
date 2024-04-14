@@ -1,7 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import * as amqp from 'amqp-connection-manager';
 import { CONFIG_OPTIONS } from '../amqp.constant';
-import { AmqpRegisterConfigurationInterfaces, ConsumeMessageInterface, ContentMessageAmqp, MessageProperties, SendMessageInterfaceOptions } from '../amqp.interface';
+import { AmqpRegisterConfigurationInterfaces, ConsumeMessageInterface, ContentMessageAmqp, HandlerInterface, MessageProperties, SendMessageInterfaceOptions } from '../amqp.interface';
 import { ModulesContainer } from '@nestjs/core';
 import { ConnectionService } from './connection.service';
 import { UUID } from 'crypto';
@@ -15,6 +15,10 @@ export class AmqpService implements OnModuleInit {
     private _default_configs: AmqpRegisterConfigurationInterfaces
     private _registered_configs: AmqpRegisterConfigurationInterfaces
     private _configs: AmqpRegisterConfigurationInterfaces
+    private _handlers: {
+        handler: (...args: any[]) => Promise<any>;
+        metaData: string;
+    }[]
     private deserializer: (message: any) => any
     private serializer: (value: any) => any
 
@@ -36,34 +40,32 @@ export class AmqpService implements OnModuleInit {
 
 
 
-    async sendMessage(toQueue: string, payload: any, data: SendMessageInterfaceOptions) {
-        let replyTo = data.queuName || this.queueName
-        const { queue } = await this.channel.assertQueue(data.queuName || this.queueName, {});
-        let correlationId: string
-        correlationId = uuidv4()
-        let num = 1
+    async sendMessage(messagePattern: string, toQueue: string, payload: any, data?: SendMessageInterfaceOptions) {
+        const { queue } = await this.channel.assertQueue("", {});
+        let correlationId: string = uuidv4()
+
         const requestFib = new Promise(async (resolve) => {
             if (data.subscribe) {
+                const consumer = await this.channel.consume(queue, (message) => {
+                    this.channel.deleteQueue(queue)
 
-                const consumer = await this.channel.consume(replyTo, (message) => {
-                    this.channel.ack(message)
-                    if (!message) console.warn('[x] Consumer cancelled');
+                    if (!message) console.warn('[x] Consumer cancelled')
                     else if (message.properties.correlationId === correlationId) {
                         resolve(this.deserializer(message.content));
                         this.channel.cancel(consumer.consumerTag)
-
                     }
+                    this.channel.ack(message)
                 }, {})
 
             }
 
 
-            const BufferedPayload = this.serializer(new ContentMessageAmqp(payload, {
+            const BufferedPayload = this.serializer(new ContentMessageAmqp(messagePattern, payload, {
 
             }))
             this.channel.sendToQueue(toQueue, BufferedPayload, <MessageProperties>{
                 correlationId: subscribe ? correlationId : null,
-                replyTo,
+                replyTo: queue,
             })
 
         });
@@ -72,27 +74,54 @@ export class AmqpService implements OnModuleInit {
     }
 
 
-    async consumeMessage({ handler }: ConsumeMessageInterface) {
-        const { queue } = await this.channel.assertQueue(this.queueName, {});
-        console.log(queue)
-        await this.channel.consume(queue, async (message) => {
-            const replyTo = message.properties.replyTo
-            const correlationId = message.properties.correlationId
-            console.log(message)
-            console.log("got it : )")
-            const res = await handler({ ...this.deserializer(message.content) }, {}, {})
 
-            if (correlationId) {
-                this.channel.sendToQueue(replyTo, this.serializer(res), <MessageProperties>{
-                    correlationId
-                });
+    private async consumeMessages() {
+        await this.channel.consume(this._configs.queue.name, async (message) => {
+            const messageData = this.deserializer(message.content)
+
+            const payload = messageData.payload
+            const messagePattern = messageData.messagePattern
+            const options = messageData.options
+
+            const handler = this.findHandlerForMessagePattern(messagePattern)
+            if (handler) {
+                this.handleMessage(handler, message)
+                this.channel.ack(message);
+            } else {
+                console.error(`No handler found for message pattern: ${messagePattern}`);
+                this.channel.ack(message); // Acknowledge message processing to avoid reprocessing
             }
-            this.channel.ack(message);
-        });
-        // await requestFib
-
-        return
+        })
+ 
     }
+
+    private findHandlerForMessagePattern(messagePattern: string): HandlerInterface {
+        const handler = this._handlers.find(h => h.metaData === messagePattern);
+        return handler ? handler.handler : undefined;
+    }
+
+    private async handleMessage(handler: HandlerInterface, message: any) {
+        const messageData = this.deserializer(message.content)
+        const payload = messageData.payload
+        const options = messageData.options
+
+
+
+        const replyTo = message.properties.replyTo
+        const correlationId = message.properties.correlationId
+        const res = await handler({ ...payload }, {}, {})
+        console.log(res)
+        if (correlationId) {
+            this.channel.sendToQueue(replyTo, this.serializer(res), <MessageProperties>{
+                correlationId
+            });
+        }
+
+
+        return res
+    }
+
+
 
     async onModuleInit() {
         await this.connectionService.connect()
@@ -104,15 +133,20 @@ export class AmqpService implements OnModuleInit {
             await this.channel.deleteExchange(exchnage_config.name)
             await this.channel.deleteQueue(this.queueName)
 
-            const {queue}=await this.channel.assertQueue(this.queueName, {   });
-            const {exchange}=await this.channel.assertExchange(exchnage_config.name, exchnage_config.type, { durable: true });
-            
-            await this.channel.bindQueue(queue,exchange, queue_config.routingKey); 
- 
+            const { queue } = await this.channel.assertQueue(this.queueName, { autoDelete: true });
+            const { exchange } = await this.channel.assertExchange(exchnage_config.name, exchnage_config.type, { durable: true });
+
+            await this.channel.bindQueue(queue, exchange, queue_config.routingKey);
             const handlers = await this.handlerService.getHandlers("controllers")
-            for (const handler of handlers) {
-                await this.consumeMessage({ handler })
+            this._handlers = handlers
+            if (handlers.length > 0) {
+                await this.consumeMessages()
+
             }
+
+        })
+        this.channel.on("close", () => {
+            "test"
         })
     }
 

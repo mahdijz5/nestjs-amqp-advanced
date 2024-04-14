@@ -4,12 +4,17 @@ import { AmqpService } from '@app/common/amqp/services/amqp.service';
 
 @Controller("post")
 export class PostController {
-  constructor(private readonly postService: PostService,private readonly amqpService : AmqpService) {}
+  constructor(private readonly postService: PostService, private readonly amqpService: AmqpService) { }
 
-  @Get()
-  async getHello(){
-    const res = await this.amqpService.sendMessage("user",{name : "test"},{toQueue :"user",subscribe :true})
-      console.log(res)
+  @Get("hey")
+  async getHello() {
+    return await this.amqpService.sendMessage("user.hello", "test2", { name: "test" }, { toQueue: "user", subscribe: true })
+    // return this.postService.getHello();
+  }
+
+  @Get("bey")
+  async getBye() {
+    return await this.amqpService.sendMessage("user.bye", "test2", { name: "test" }, { toQueue: "user", subscribe: true })
     // return this.postService.getHello();
   }
 }

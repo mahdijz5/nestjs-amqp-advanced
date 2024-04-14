@@ -5,4 +5,8 @@ export class UserService {
   getHello(): string {
     return 'Hello World!';
   }
+
+  getBye(): string {
+    return 'Bye World!';
+  }
 }

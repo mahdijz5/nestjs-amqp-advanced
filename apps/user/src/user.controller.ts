@@ -9,7 +9,11 @@ export class UserController {
 
   @MessagePattern("user.hello")
   getHello(data : any): string {
-    console.log(data)
     return this.userService.getHello();
+  }
+
+  @MessagePattern("user.bye")
+  bye(data : any): string {
+    return this.userService.getBye();
   }
 }

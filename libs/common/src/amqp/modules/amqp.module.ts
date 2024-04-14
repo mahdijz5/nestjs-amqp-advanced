@@ -3,7 +3,7 @@ import { AmqpService } from '../services/amqp.service';
 import { CONFIG_OPTIONS, CREATE_CHANNEL } from '../amqp.constant';
 import { UserController } from 'apps/user/src/user.controller';
 import { MetadataScanner, ModulesContainer, Reflector } from '@nestjs/core';
- import { flatMap, get, isNil, some, uniqBy, isObject } from 'lodash';
+import { flatMap, get, isNil, some, uniqBy, isObject } from 'lodash';
 import { Module as ModuleContainer } from '@nestjs/core/injector/module';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { STATIC_CONTEXT } from '@nestjs/core/injector/constants';
@@ -17,7 +17,7 @@ import { HandlerModule } from './handler.module';
 import { HandlerService } from '../services/handler.service';
 
 @Module({})
-export class AmqpModule   {
+export class AmqpModule {
   private queueName: string;
 
   static register(options: AmqpRegisterConfigurationInterfaces): DynamicModule {
@@ -29,16 +29,16 @@ export class AmqpModule   {
         {
           provide: CONFIG_OPTIONS,
           useValue: options,
-        }, AmqpService,ConnectionService, MetadataScanner, ModulesContainer, ExternalContextCreator, RabbitRpcParamsFactory],
-      exports: [AmqpService,MetadataScanner, ModulesContainer, ExternalContextCreator, RabbitRpcParamsFactory],
+        }, AmqpService, ConnectionService, MetadataScanner, ModulesContainer, ExternalContextCreator, RabbitRpcParamsFactory],
+      exports: [AmqpService, MetadataScanner, ModulesContainer, ExternalContextCreator, RabbitRpcParamsFactory],
     };
   }
- 
-  constructor(
-    private readonly connectionService : ConnectionService,
-    private readonly amqpService : AmqpService,
-    private readonly handlerService : HandlerService,
-  ) {}
 
- 
+  constructor(
+    private readonly connectionService: ConnectionService,
+    private readonly amqpService: AmqpService,
+    private readonly handlerService: HandlerService,
+  ) { }
+
+
 }

@@ -1,3 +1,4 @@
+import { Options } from "amqp-connection-manager"
 import { PublishOptions } from "amqp-connection-manager/dist/types/ChannelWrapper"
 
 export interface ExchangeRegisterConfigurationInterfaces {
@@ -9,18 +10,24 @@ export interface ExchangeRegisterConfigurationInterfaces {
 export interface QueueRegisterConfigurationInterfaces {
     name: string
     routingKey: string
+    options? : Options.AssertQueue
 
 }
 
 export interface AmqpRegisterConfigurationInterfaces {
     queue?: QueueRegisterConfigurationInterfaces
     exchnage?: ExchangeRegisterConfigurationInterfaces
-    options? : {
+    options?: {
         ack?: boolean
-        nack? : boolean
+        nack?: boolean
     }
 }
 
+export interface HandlerListInterface {
+    handler: HandlerInterface
+    metaData: string;
+}
+export type HandlerInterface = (...args: any[]) => Promise<any>
 
 
 export interface SendMessageInterfaceOptions {
@@ -31,19 +38,22 @@ export interface SendMessageInterfaceOptions {
 
 export interface ConsumeMessageInterface {
     handler: (...args: any[]) => Promise<any>
+    metaData: string | "*"
 }
 
 export class ContentMessageAmqp {
     private payload: any
     private options: any
+    private messagePattern: string
 
-    constructor(payload: any, options: any) {
+    constructor(messagePattern: string, payload: any, options: any) {
         this.payload = payload
         this.options = options
+        this.messagePattern = messagePattern
     }
 }
 
-export interface MessageProperties extends PublishOptions{
+export interface MessageProperties extends PublishOptions {
     contentType?: string;
     contentEncoding?: string;
     headers: { [key: string]: any };
@@ -58,4 +68,4 @@ export interface MessageProperties extends PublishOptions{
     userId?: string;
     appId?: string;
     clusterId?: string;
- }
+}
