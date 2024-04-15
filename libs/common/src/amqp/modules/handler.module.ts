@@ -11,8 +11,7 @@ import { RabbitRpcParamsFactory } from '../rabbitmq.factory';
 export class HandlerModule   {
    constructor( 
     ) {
-        console.log("the fuck?")
-    }
+     }
 
   
 

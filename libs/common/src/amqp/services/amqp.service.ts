@@ -26,7 +26,6 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
     private default_queue: string
 
     public channel: amqp.ChannelWrapper
-
     constructor(
         @Inject(CONFIG_OPTIONS) private options: AmqpRegisterConfigurationInterfaces,
         private readonly connectionService: ConnectionService,
@@ -52,6 +51,17 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
     }
 
 
+    /**
+     * Publish a single message to an exchange.
+     * @param payload 
+     * @param messagePattern 
+     * @param exchange 
+     * @param routingKey
+     * @param options : {
+     *  subscribe: if true, result will be replyed
+     * } 
+     * @returns 
+     */
     public async publish({ payload, messagePattern, exchange, routingKey, options }: PublishArguments) {
         const { queue: replyTo } = await this.channel.assertQueue("", {});
         let correlationId: string = uuidv4()
@@ -83,6 +93,16 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
         return await requestFib
     }
 
+    /**
+     * Send a single message with the content given as a buffer to the specific queue named, bypassing routing. The options and return value are exactly the same as for publish.
+     * @param messagePattern 
+     * @param queue 
+     * @param payload no need to serialize
+     * @param options : {
+     *  subscribe: if true, result will be replyed
+     * }
+     * @returns 
+     */
     async send(messagePattern: string, queue: string, payload: any, options?: SendMessageInterfaceOptions) {
         const { queue: replyTo } = await this.channel.assertQueue("", {});
         let correlationId: string = uuidv4()
@@ -102,7 +122,6 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
 
             }
             const BufferedPayload = this.serializer(new ContentMessageAmqp(messagePattern, payload, {}))
-
             this.channel.sendToQueue(queue, BufferedPayload, <MessageProperties>{
                 correlationId: subscribe ? correlationId : null,
                 replyTo: replyTo,

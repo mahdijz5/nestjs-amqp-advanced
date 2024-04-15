@@ -16,8 +16,7 @@ import { TestingModule } from '@nestjs/testing';
 import { HandlerModule } from './handler.module';
 import { HandlerService } from '../services/handler.service';
 import { AmqpManagerService } from '../services/amqp-manager.service';
-import { ClientAmqp } from '../services/clientAmqp.service';
-
+ 
 @Module({})
 export class AmqpModule {
   private queueName: string;
