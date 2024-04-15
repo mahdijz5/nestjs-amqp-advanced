@@ -48,10 +48,7 @@ export class AmqpManagerService {
     }
 
 
-    public async publish({ payload, exchange,routingKey, options }: PublishArguments) {
-        return await this.channel.publish(exchange,routingKey,this.serializer(payload),<any>{...options})
-    }
-
+   
     public async consume(queue,callback : (msg:any) => any ,options : ConsumerOptions) {
         return await this.channel.consume(queue,(message) => {
             callback({...message,content : this.deserializer(message.content)})

@@ -5,7 +5,7 @@ import { AmqpModule } from '@app/common/amqp/modules/amqp.module';
 
 @Module({
   imports: [
-    AmqpModule.register({
+    AmqpModule.forRoot({
       exchnage: {
         name: "post", 
         type: "direct"

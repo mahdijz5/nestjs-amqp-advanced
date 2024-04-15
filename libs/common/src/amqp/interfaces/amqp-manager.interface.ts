@@ -75,9 +75,11 @@ export interface ConsumerOptions {
 
 export interface PublishArguments {
     exchange: string,
+    messagePattern : string,
     routingKey: any,
     payload: any
     options?: {
+        subscribe? :boolean,
         expiration?: string,
         userId?: string
         CC?: string[]

@@ -21,7 +21,7 @@ import { AmqpManagerService } from '../services/amqp-manager.service';
 export class AmqpModule {
   private queueName: string;
 
-  static register(options: AmqpRegisterConfigurationInterfaces): DynamicModule {
+  static forRoot(options: AmqpRegisterConfigurationInterfaces): DynamicModule {
 
     return {
       module: AmqpModule,

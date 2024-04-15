@@ -10,6 +10,7 @@ import { HandlerService } from './handler.service';
 import { _default_configs } from '../configs/default.configs';
 import { subscribe } from 'diagnostics_channel';
 import { AmqpManagerService } from './amqp-manager.service';
+import { PublishArguments } from '../interfaces/amqp-manager.interface';
 
 
 @Injectable()
@@ -51,6 +52,38 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
     }
 
 
+    public async publish({ payload, messagePattern, exchange, routingKey, options }: PublishArguments) {
+        const { queue: replyTo } = await this.channel.assertQueue("", {});
+        let correlationId: string = uuidv4()
+        console.log(options)
+
+        const requestFib = new Promise(async (resolve) => {
+            if (options?.subscribe) {
+                const consumer = await this.consume(replyTo, (message) => {
+                    this.channel.deleteQueue(replyTo)
+                    console.log(message)
+                    if (!message) console.warn('[x] Consumer cancelled')
+                    else if (message.properties.correlationId === correlationId) {
+                        resolve(message.content);
+                        this.channel.cancel(consumer.consumerTag)
+                    }
+                    this.channel.ack(message)
+                }, {})
+                const BufferedPayload = this.serializer(new ContentMessageAmqp(messagePattern, payload, {}))
+
+                await this.channel.publish(exchange, routingKey, BufferedPayload, <any>{
+                    ...options,
+                    correlationId: subscribe ? correlationId : null,
+                    replyTo: replyTo,
+                })
+
+            } else {
+                resolve(true)
+            }
+
+        });
+        return await requestFib
+    }
 
     async send(messagePattern: string, queue: string, payload: any, options?: SendMessageInterfaceOptions) {
         const { queue: replyTo } = await this.channel.assertQueue("", {});
@@ -87,7 +120,6 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
     private async consumeMessages(queue: string) {
         await this.channel.consume(queue, async (message) => {
             const messageData = this.deserializer(message.content)
-            console.log(messageData)
             const payload = messageData.payload
             const messagePattern = messageData.messagePattern
             const options = messageData.options
@@ -111,6 +143,7 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
 
     private async handleMessage(handler: HandlerInterface, message: any) {
         const messageData = this.deserializer(message.content)
+        console.log(message)
         const payload = messageData.payload
         const options = messageData.options
 
