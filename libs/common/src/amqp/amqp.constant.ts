@@ -1,5 +1,6 @@
 export const CREATE_CHANNEL = 'CREATE_CHANNEL';
 export const CONFIG_OPTIONS = "CONFIG_OPTIONS"
+export const QUEUE_REGISTER = "QUEUE_REGISTER"
 export const RABBIT_HANDLER = Symbol('RABBIT_HANDLER');
 export const RABBIT_CONFIG_TOKEN = Symbol('RABBIT_CONFIG');
 export const RABBIT_PARAM_TYPE = 3;

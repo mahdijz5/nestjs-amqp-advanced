@@ -1,6 +1,6 @@
 import { DynamicModule, Inject, Module, OnModuleInit, ParamData, Scope, Type, forwardRef } from '@nestjs/common';
 import { AmqpService } from '../services/amqp.service';
-import { CONFIG_OPTIONS, CREATE_CHANNEL } from '../amqp.constant';
+import { CONFIG_OPTIONS, CREATE_CHANNEL, QUEUE_REGISTER } from '../amqp.constant';
 import { UserController } from 'apps/user/src/user.controller';
 import { MetadataScanner, ModulesContainer, Reflector } from '@nestjs/core';
 import { flatMap, get, isNil, some, uniqBy, isObject } from 'lodash';
@@ -16,6 +16,7 @@ import { TestingModule } from '@nestjs/testing';
 import { HandlerModule } from './handler.module';
 import { HandlerService } from '../services/handler.service';
 import { AmqpManagerService } from '../services/amqp-manager.service';
+import { ClientAmqp } from '../services/clientAmqp.service';
 
 @Module({})
 export class AmqpModule {
@@ -30,15 +31,13 @@ export class AmqpModule {
         {
           provide: CONFIG_OPTIONS,
           useValue: options,
-        },AmqpService, ConnectionService, MetadataScanner, ModulesContainer, ExternalContextCreator, RabbitRpcParamsFactory],
+        }, AmqpService, ConnectionService, MetadataScanner, ModulesContainer, ExternalContextCreator, RabbitRpcParamsFactory],
       exports: [AmqpService, MetadataScanner, ModulesContainer, ExternalContextCreator, RabbitRpcParamsFactory],
     };
   }
-
+ 
   constructor(
-    private readonly connectionService: ConnectionService,
-    private readonly amqpService: AmqpService,
-    private readonly handlerService: HandlerService,
+    
   ) { }
 
 

@@ -23,7 +23,8 @@ import { AmqpModule } from '@app/common/amqp/modules/amqp.module';
           
         }
       }]
-    })],
+    }) 
+ ],
   controllers: [UserController],
   providers: [UserService],
 })

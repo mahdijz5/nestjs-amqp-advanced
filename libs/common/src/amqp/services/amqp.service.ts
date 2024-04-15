@@ -55,13 +55,11 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
     public async publish({ payload, messagePattern, exchange, routingKey, options }: PublishArguments) {
         const { queue: replyTo } = await this.channel.assertQueue("", {});
         let correlationId: string = uuidv4()
-        console.log(options)
 
         const requestFib = new Promise(async (resolve) => {
             if (options?.subscribe) {
                 const consumer = await this.consume(replyTo, (message) => {
                     this.channel.deleteQueue(replyTo)
-                    console.log(message)
                     if (!message) console.warn('[x] Consumer cancelled')
                     else if (message.properties.correlationId === correlationId) {
                         resolve(message.content);
@@ -143,7 +141,6 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
 
     private async handleMessage(handler: HandlerInterface, message: any) {
         const messageData = this.deserializer(message.content)
-        console.log(message)
         const payload = messageData.payload
         const options = messageData.options
 
