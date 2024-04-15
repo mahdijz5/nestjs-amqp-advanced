@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { AmqpRegisterConfigurationInterfaces } from "../amqp.interface";
+import { AmqpRegisterConfigurationInterfaces } from "../interfaces/amqp.interface";
 import { v4 as uuidv4 } from 'uuid';
 
 let queueuuId = uuidv4()

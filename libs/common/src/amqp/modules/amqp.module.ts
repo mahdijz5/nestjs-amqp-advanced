@@ -10,11 +10,12 @@ import { STATIC_CONTEXT } from '@nestjs/core/injector/constants';
 import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
 import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { RabbitRpcParamsFactory } from '../rabbitmq.factory';
-import { AmqpRegisterConfigurationInterfaces } from '../amqp.interface';
+import { AmqpRegisterConfigurationInterfaces } from '../interfaces/amqp.interface';
 import { ConnectionService } from '../services/connection.service';
 import { TestingModule } from '@nestjs/testing';
 import { HandlerModule } from './handler.module';
 import { HandlerService } from '../services/handler.service';
+import { AmqpManagerService } from '../services/amqp-manager.service';
 
 @Module({})
 export class AmqpModule {
@@ -29,7 +30,7 @@ export class AmqpModule {
         {
           provide: CONFIG_OPTIONS,
           useValue: options,
-        }, AmqpService, ConnectionService, MetadataScanner, ModulesContainer, ExternalContextCreator, RabbitRpcParamsFactory],
+        },AmqpService, ConnectionService, MetadataScanner, ModulesContainer, ExternalContextCreator, RabbitRpcParamsFactory],
       exports: [AmqpService, MetadataScanner, ModulesContainer, ExternalContextCreator, RabbitRpcParamsFactory],
     };
   }

@@ -9,13 +9,13 @@ export interface ExchangeRegisterConfigurationInterfaces {
 }
 export interface QueueRegisterConfigurationInterfaces {
     name: string
-    routingKey: string
-    options? : Options.AssertQueue
+    routingKey?: string
+    options?: Options.AssertQueue
 
 }
 
 export interface AmqpRegisterConfigurationInterfaces {
-    queue?: QueueRegisterConfigurationInterfaces
+    queue : QueueRegisterConfigurationInterfaces
     exchnage?: ExchangeRegisterConfigurationInterfaces
     options?: {
         ack?: boolean
@@ -31,9 +31,7 @@ export type HandlerInterface = (...args: any[]) => Promise<any>
 
 
 export interface SendMessageInterfaceOptions {
-    toQueue: string
-    subscribe?: boolean
-    queuName?: string
+    subscribe?: boolean 
 }
 
 export interface ConsumeMessageInterface {

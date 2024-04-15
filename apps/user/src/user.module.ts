@@ -12,7 +12,10 @@ import { AmqpModule } from '@app/common/amqp/modules/amqp.module';
       },
       queue: {
         name: "test2",
-        routingKey: "test.*"
+        routingKey: "test.*",
+        options : {
+          
+        }
       }
     })],
   controllers: [UserController],

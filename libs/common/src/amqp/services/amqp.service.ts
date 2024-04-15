@@ -1,7 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import * as amqp from 'amqp-connection-manager';
 import { CONFIG_OPTIONS } from '../amqp.constant';
-import { AmqpRegisterConfigurationInterfaces, ConsumeMessageInterface, ContentMessageAmqp, HandlerInterface, MessageProperties, SendMessageInterfaceOptions } from '../amqp.interface';
+import { AmqpRegisterConfigurationInterfaces, ConsumeMessageInterface, ContentMessageAmqp, HandlerInterface, MessageProperties, SendMessageInterfaceOptions } from '../interfaces/amqp.interface';
 import { ModulesContainer } from '@nestjs/core';
 import { ConnectionService } from './connection.service';
 import { UUID } from 'crypto';
@@ -9,9 +9,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { HandlerService } from './handler.service';
 import { _default_configs } from '../configs/default.configs';
 import { subscribe } from 'diagnostics_channel';
+import { AmqpManagerService } from './amqp-manager.service';
+
 
 @Injectable()
-export class AmqpService implements OnModuleInit {
+export class AmqpService extends AmqpManagerService implements OnModuleInit {
     private _default_configs: AmqpRegisterConfigurationInterfaces
     private _registered_configs: AmqpRegisterConfigurationInterfaces
     private _configs: AmqpRegisterConfigurationInterfaces
@@ -19,10 +21,9 @@ export class AmqpService implements OnModuleInit {
         handler: (...args: any[]) => Promise<any>;
         metaData: string;
     }[]
-    private deserializer: (message: any) => any
-    private serializer: (value: any) => any
 
-    private channel: amqp.ChannelWrapper
+    public channel: amqp.ChannelWrapper
+
     private queueName: string
     constructor(
         @Inject(CONFIG_OPTIONS) private options: AmqpRegisterConfigurationInterfaces,
@@ -30,8 +31,8 @@ export class AmqpService implements OnModuleInit {
         private readonly handlerService: HandlerService,
 
     ) {
-        this.deserializer = (message) => JSON.parse(message.toString())
-        this.serializer = (value) => Buffer.from(JSON.stringify(value))
+        super()
+
         this._default_configs = _default_configs
         this._registered_configs = this.options
         this._configs = { ...this._default_configs, ...this._registered_configs }
@@ -39,33 +40,41 @@ export class AmqpService implements OnModuleInit {
     }
 
 
+    get handlerList() {
+        return this._handlers
+    }
 
-    async sendMessage(messagePattern: string, toQueue: string, payload: any, data?: SendMessageInterfaceOptions) {
-        const { queue } = await this.channel.assertQueue("", {});
+
+
+    get configs() {
+        return this.configs
+    }
+
+
+
+    async send(messagePattern: string, queue: string, payload: any, options?: SendMessageInterfaceOptions) {
+        const { queue: replyTo } = await this.channel.assertQueue("", {});
         let correlationId: string = uuidv4()
 
         const requestFib = new Promise(async (resolve) => {
-            if (data.subscribe) {
-                const consumer = await this.channel.consume(queue, (message) => {
-                    this.channel.deleteQueue(queue)
+            if (options.subscribe) {
+                const consumer = await this.consume(replyTo, (message) => {
+                     this.channel.deleteQueue(replyTo)
 
                     if (!message) console.warn('[x] Consumer cancelled')
                     else if (message.properties.correlationId === correlationId) {
-                        resolve(this.deserializer(message.content));
+                        resolve(message.content);
                         this.channel.cancel(consumer.consumerTag)
                     }
                     this.channel.ack(message)
                 }, {})
 
             }
+            const BufferedPayload = this.serializer(new ContentMessageAmqp(messagePattern, payload, {}))
 
-
-            const BufferedPayload = this.serializer(new ContentMessageAmqp(messagePattern, payload, {
-
-            }))
-            this.channel.sendToQueue(toQueue, BufferedPayload, <MessageProperties>{
+            this.channel.sendToQueue(queue, BufferedPayload, <MessageProperties>{
                 correlationId: subscribe ? correlationId : null,
-                replyTo: queue,
+                replyTo: replyTo,
             })
 
         });
@@ -92,7 +101,7 @@ export class AmqpService implements OnModuleInit {
                 this.channel.ack(message); // Acknowledge message processing to avoid reprocessing
             }
         })
- 
+
     }
 
     private findHandlerForMessagePattern(messagePattern: string): HandlerInterface {
@@ -110,7 +119,6 @@ export class AmqpService implements OnModuleInit {
         const replyTo = message.properties.replyTo
         const correlationId = message.properties.correlationId
         const res = await handler({ ...payload }, {}, {})
-        console.log(res)
         if (correlationId) {
             this.channel.sendToQueue(replyTo, this.serializer(res), <MessageProperties>{
                 correlationId
@@ -130,13 +138,13 @@ export class AmqpService implements OnModuleInit {
         const queue_config = this._configs.queue
 
         this.channel.on("connect", async () => {
-            await this.channel.deleteExchange(exchnage_config.name)
-            await this.channel.deleteQueue(this.queueName)
+            await this.deleteExchange({ exchange: exchnage_config.name })
+            await this.deleteQueue({ queue: this.queueName })
 
-            const { queue } = await this.channel.assertQueue(this.queueName, { autoDelete: true });
-            const { exchange } = await this.channel.assertExchange(exchnage_config.name, exchnage_config.type, { durable: true });
+            const { queue } = await this.assertQueue({ queue: this.queueName, options: {} });
+            const { exchange } = await this.assertExchange({ exchange: exchnage_config.name, type: exchnage_config.type, options: { durable: true } });
 
-            await this.channel.bindQueue(queue, exchange, queue_config.routingKey);
+            await this.bindQueue({ queue, exchange, routingKey: queue_config.routingKey });
             const handlers = await this.handlerService.getHandlers("controllers")
             this._handlers = handlers
             if (handlers.length > 0) {
@@ -146,7 +154,7 @@ export class AmqpService implements OnModuleInit {
 
         })
         this.channel.on("close", () => {
-            "test"
+
         })
     }
 

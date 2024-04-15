@@ -8,13 +8,13 @@ export class PostController {
 
   @Get("hey")
   async getHello() {
-    return await this.amqpService.sendMessage("user.hello", "test2", { name: "test" }, { toQueue: "user", subscribe: true })
+    return await this.amqpService.send("user.hello", "test2", { name: "test" }, { subscribe: true })
     // return this.postService.getHello();
   }
 
   @Get("bey")
   async getBye() {
-    return await this.amqpService.sendMessage("user.bye", "test2", { name: "test" }, { toQueue: "user", subscribe: true })
+    return await this.amqpService.send("user.bye", "test2", { name: "test" }, { subscribe: true })
     // return this.postService.getHello();
   }
 }

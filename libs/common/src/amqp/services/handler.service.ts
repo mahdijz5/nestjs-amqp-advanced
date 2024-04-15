@@ -8,7 +8,7 @@ import { STATIC_CONTEXT } from '@nestjs/core/injector/constants';
 import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
 import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { RabbitRpcParamsFactory } from '../rabbitmq.factory';
-import { AmqpRegisterConfigurationInterfaces } from '../amqp.interface';
+import { AmqpRegisterConfigurationInterfaces } from '../interfaces/amqp.interface';
 
 
 
