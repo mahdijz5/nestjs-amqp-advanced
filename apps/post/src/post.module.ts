@@ -10,10 +10,10 @@ import { AmqpModule } from '@app/common/amqp/modules/amqp.module';
         name: "post", 
         type: "direct"
       },
-      queue: {
+      queue: [{
         name: "post",
-        routingKey: "post-queue"
-      }
+        routingKey: "post-queue",
+      }]
     })],
   controllers: [PostController],
   providers: [PostService],

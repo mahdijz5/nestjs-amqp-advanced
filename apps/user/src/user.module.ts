@@ -8,15 +8,21 @@ import { AmqpModule } from '@app/common/amqp/modules/amqp.module';
     AmqpModule.register({
       exchnage: {
         name: "test",
-        type: "direct"
+        type: "topic"
       },
-      queue: {
-        name: "test2",
-        routingKey: "test.*",
+      queue: [{
+        name: "queue-1",
+        routingKey: "queue.*",
         options : {
           
         }
-      }
+      },{
+        name: "queue-2",
+        routingKey: "queue-2*",
+        options : {
+          
+        }
+      }]
     })],
   controllers: [UserController],
   providers: [UserService],

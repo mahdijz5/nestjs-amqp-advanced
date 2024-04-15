@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import * as amqp from 'amqp-connection-manager';
 import { CONFIG_OPTIONS } from '../amqp.constant';
 import { AmqpRegisterConfigurationInterfaces, ConsumeMessageInterface, ContentMessageAmqp, HandlerInterface, MessageProperties, SendMessageInterfaceOptions } from '../interfaces/amqp.interface';
@@ -22,9 +22,10 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
         metaData: string;
     }[]
 
+    private default_queue: string
+
     public channel: amqp.ChannelWrapper
 
-    private queueName: string
     constructor(
         @Inject(CONFIG_OPTIONS) private options: AmqpRegisterConfigurationInterfaces,
         private readonly connectionService: ConnectionService,
@@ -36,7 +37,6 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
         this._default_configs = _default_configs
         this._registered_configs = this.options
         this._configs = { ...this._default_configs, ...this._registered_configs }
-        this.queueName = this.options.queue.name
     }
 
 
@@ -59,7 +59,7 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
         const requestFib = new Promise(async (resolve) => {
             if (options.subscribe) {
                 const consumer = await this.consume(replyTo, (message) => {
-                     this.channel.deleteQueue(replyTo)
+                    this.channel.deleteQueue(replyTo)
 
                     if (!message) console.warn('[x] Consumer cancelled')
                     else if (message.properties.correlationId === correlationId) {
@@ -84,10 +84,10 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
 
 
 
-    private async consumeMessages() {
-        await this.channel.consume(this._configs.queue.name, async (message) => {
+    private async consumeMessages(queue: string) {
+        await this.channel.consume(queue, async (message) => {
             const messageData = this.deserializer(message.content)
-
+            console.log(messageData)
             const payload = messageData.payload
             const messagePattern = messageData.messagePattern
             const options = messageData.options
@@ -139,16 +139,30 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
 
         this.channel.on("connect", async () => {
             await this.deleteExchange({ exchange: exchnage_config.name })
-            await this.deleteQueue({ queue: this.queueName })
-
-            const { queue } = await this.assertQueue({ queue: this.queueName, options: {} });
             const { exchange } = await this.assertExchange({ exchange: exchnage_config.name, type: exchnage_config.type, options: { durable: true } });
+            if (this._configs.queue.length <= 0) {
+                throw new BadRequestException("At least one queue should be defined.")
+            }
 
-            await this.bindQueue({ queue, exchange, routingKey: queue_config.routingKey });
+            for (let queueItem of this._configs.queue) {
+                await this.deleteQueue({ queue: queueItem.name })
+                const { queue } = await this.assertQueue({ queue: queueItem.name, options: { ...queueItem.options } });
+                await this.bindQueue({ queue, exchange, routingKey: queueItem.routingKey || queue });
+                if (queueItem.isDefault) this.default_queue = queue
+            }
+            if (!this.default_queue) {
+                if (this._configs.queue[0]) {
+                    this.default_queue = this._configs.queue[0].name
+                }
+            }
+
+
             const handlers = await this.handlerService.getHandlers("controllers")
             this._handlers = handlers
             if (handlers.length > 0) {
-                await this.consumeMessages()
+                for (let queueItem of this._configs.queue) {
+                    await this.consumeMessages(queueItem.name)
+                }
 
             }
 

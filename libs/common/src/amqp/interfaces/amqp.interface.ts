@@ -1,5 +1,6 @@
 import { Options } from "amqp-connection-manager"
 import { PublishOptions } from "amqp-connection-manager/dist/types/ChannelWrapper"
+import { AssertQueueArguments } from "./amqp-manager.interface"
 
 export interface ExchangeRegisterConfigurationInterfaces {
     name: string
@@ -7,15 +8,15 @@ export interface ExchangeRegisterConfigurationInterfaces {
 
 
 }
-export interface QueueRegisterConfigurationInterfaces {
+export interface QueueRegisterConfigurationInterfaces extends Pick<AssertQueueArguments, "options"> {
     name: string
     routingKey?: string
-    options?: Options.AssertQueue
+    isDefault?: boolean
 
 }
 
 export interface AmqpRegisterConfigurationInterfaces {
-    queue : QueueRegisterConfigurationInterfaces
+    queue: QueueRegisterConfigurationInterfaces[]
     exchnage?: ExchangeRegisterConfigurationInterfaces
     options?: {
         ack?: boolean
@@ -31,7 +32,7 @@ export type HandlerInterface = (...args: any[]) => Promise<any>
 
 
 export interface SendMessageInterfaceOptions {
-    subscribe?: boolean 
+    subscribe?: boolean
 }
 
 export interface ConsumeMessageInterface {

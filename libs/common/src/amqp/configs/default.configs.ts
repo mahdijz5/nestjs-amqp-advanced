@@ -8,8 +8,8 @@ export const _default_configs : AmqpRegisterConfigurationInterfaces = {
         name : uuidv4(),
         type : "direct"
     },
-    queue : {
+    queue : [{
         name  : queueuuId,
         routingKey :queueuuId
-    }
+    }]
 }

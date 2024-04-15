@@ -8,6 +8,7 @@ export class PostController {
 
   @Get("hey")
   async getHello() {
+    return await this.amqpService.publish({payload :"test",exchange :"test",routingKey : "queue.com"})
     return await this.amqpService.send("user.hello", "test2", { name: "test" }, { subscribe: true })
     // return this.postService.getHello();
   }
