@@ -181,7 +181,7 @@ export class AmqpService extends AmqpManagerService implements OnModuleInit {
 
 
     async onModuleInit() {
-        await this.connectionService.connect()
+        await this.connectionService.connect(this._configs.host)
         this.channel = await this.connectionService.createChannel()
         const exchnage_config = this._configs.exchnage
         const queue_config = this._configs.queue

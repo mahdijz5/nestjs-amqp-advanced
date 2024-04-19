@@ -10,8 +10,8 @@ export class ConnectionService {
     constructor(
     ) { }
 
-    connect(): amqp.AmqpConnectionManager {
-        this.connection = amqp.connect('amqp://rabbitmq_username:rabbitmq_password@127.0.0.1:5672');
+    connect(url:string): amqp.AmqpConnectionManager {
+        this.connection = amqp.connect(url);
         return this.connection;
     }
 

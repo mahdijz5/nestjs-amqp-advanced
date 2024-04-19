@@ -16,6 +16,7 @@ export interface QueueRegisterConfigurationInterfaces extends Pick<AssertQueueAr
 }
 
 export interface AmqpRegisterConfigurationInterfaces {
+    host:string
     queue: QueueRegisterConfigurationInterfaces[]
     exchnage?: ExchangeRegisterConfigurationInterfaces
     options?: {
