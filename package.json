@@ -1,0 +1,36 @@
+{
+  "name": "@mahdijz5/nestjs-amqp-advanced",
+  "version": "1.0.1",
+  "description": "NestJS RabbitMQ Advanced Config is a custom package designed to extend the capabilities of NestJS for integrating with RabbitMQ. While NestJS provides basic RabbitMQ integration through the @nestjs/microservices package, this custom package offers advanced configuration options for users who require more flexibility and control over their RabbitMQ setup.",
+  "author": "",
+  "license": "MIT",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "prepublish": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@changesets/cli": "^2.26.0",
+    "@types/node": "^20.12.7",
+    "tsup": "^6.5.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
+    "amqp-connection-manager": "^4.1.14",
+    "amqplib": "^0.10.3",
+    "lodash": "^4.17.21",
+    "nestjs-amqp-advanced": "^1.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.1",
+    "uuid": "^9.0.1",
+    "winston-daily-rotate-file": "^5.0.0"
+  }
+}
