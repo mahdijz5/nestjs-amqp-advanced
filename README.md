@@ -83,11 +83,11 @@ export class UserController {
 
 ## Send Message
 
-# Send to queue
+### Send to queue
 ``` typescript
  await this.amqpService.send("login", "queue-1", { ...payload }, { subscribe: true })
 ```
-# Publish Message
+### Publish Message
 ``` typescript
  await this.amqpService.publish({payload,exchange,messagePattern ,routingKey,options : {subscribe :true}})
 ```
