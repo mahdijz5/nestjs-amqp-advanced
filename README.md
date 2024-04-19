@@ -1,4 +1,5 @@
 ## NestJS RabbitMQ Advanced Config
+[![npm version](https://badge.fury.io/js/%40mahdijz5%2Fnestjs-amqp-advanced.svg)](https://badge.fury.io/js/%40mahdijz5%2Fnestjs-amqp-advanced)
 
 ### Description
 NestJS RabbitMQ Advanced Config is a custom package designed to extend the capabilities of NestJS for integrating with RabbitMQ. While NestJS provides basic RabbitMQ integration through the `@nestjs/microservices` package, this custom package offers advanced configuration options for users who require more flexibility and control over their RabbitMQ setup.
